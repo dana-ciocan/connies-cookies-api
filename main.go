@@ -15,52 +15,50 @@ func main() {
     defer database.CloseDB()
 
     router := gin.Default()
-    router.GET("/albums", getAlbums)
-	router.GET("/albums/:id", getAlbumByID)
-    router.POST("/albums", postAlbums)
+    
+    // CORS middleware for demo purposes - allows all origins
+    router.Use(func(c *gin.Context) {
+        c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+        c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        
+        if c.Request.Method == "OPTIONS" {
+            c.AbortWithStatus(204)
+            return
+        }
+        
+        c.Next()
+    })
+    
+    router.GET("/cookies", getCookies)
+	router.GET("/cookies/:id", getCookieByID)
 
     log.Println("Starting server on localhost:8181")
     router.Run("localhost:8181")
 }
 
-func getAlbums(c *gin.Context) {
-    albums, err := database.GetAllAlbums()
+func getCookies(c *gin.Context) {
+    cookies, err := database.GetAllCookies()
     if err != nil {
         c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
-    c.IndentedJSON(http.StatusOK, albums)
+    c.IndentedJSON(http.StatusOK, cookies)
 }
 
-func postAlbums(c *gin.Context) {
-    var newAlbum database.Album
-
-    if err := c.BindJSON(&newAlbum); err != nil {
-        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-
-    if err := database.CreateAlbum(newAlbum); err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
-
-    c.IndentedJSON(http.StatusCreated, newAlbum)
-}
-
-func getAlbumByID(c *gin.Context) {
+func getCookieByID(c *gin.Context) {
     id := c.Param("id")
 
-    album, err := database.GetAlbumByID(id)
+    cookie, err := database.GetCookieByID(id)
     if err != nil {
         c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
 
-    if album == nil {
-        c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
+    if cookie == nil {
+        c.IndentedJSON(http.StatusNotFound, gin.H{"message": "cookie not found"})
         return
     }
 
-    c.IndentedJSON(http.StatusOK, album)
+    c.IndentedJSON(http.StatusOK, cookie)
 }

@@ -9,18 +9,18 @@ import (
 
 var DB *sql.DB
 
-// Album represents the album structure for database operations
-type Album struct {
+// Cookie represents the cookie structure for database operations
+type Cookie struct {
 	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
+	Name   string  `json:"name"`
+	Description string  `json:"description"`
 	Price  float64 `json:"price"`
 }
 
 // InitDB initializes the SQLite database
 func InitDB() {
 	var err error
-	DB, err = sql.Open("sqlite3", "./albums.db")
+	DB, err = sql.Open("sqlite3", "./cookies.db")
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -32,20 +32,20 @@ func InitDB() {
 
 	log.Println("Connected to SQLite database")
 
-	// Create the albums table if it doesn't exist
+	// Create the cookies table if it doesn't exist
 	createTable()
 	
 	// Insert sample data if the table is empty
 	insertSampleData()
 }
 
-// createTable creates the albums table
+// createTable creates the cookies table
 func createTable() {
 	query := `
-	CREATE TABLE IF NOT EXISTS albums (
+	CREATE TABLE IF NOT EXISTS cookies (
 		id TEXT PRIMARY KEY,
-		title TEXT NOT NULL,
-		artist TEXT NOT NULL,
+		name TEXT NOT NULL,
+		description TEXT NOT NULL,
 		price REAL NOT NULL
 	);`
 
@@ -55,71 +55,71 @@ func createTable() {
 	}
 }
 
-// insertSampleData adds sample albums if the table is empty
+// insertSampleData adds sample cookies if the table is empty
 func insertSampleData() {
 	var count int
-	err := DB.QueryRow("SELECT COUNT(*) FROM albums").Scan(&count)
+	err := DB.QueryRow("SELECT COUNT(*) FROM cookies").Scan(&count)
 	if err != nil {
-		log.Fatal("Failed to count albums:", err)
+		log.Fatal("Failed to count cookies:", err)
 	}
 
 	if count == 0 {
-		sampleAlbums := []Album{
-			{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-			{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-			{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
+		sampleCookies := []Cookie{
+			{ID: "1", Name: "Chocolate chip cookie", Description: "A delicious, crunchy chocolate chip cookie.", Price: 2.00},
+			{ID: "2", Name: "Oatmeal raisin cookie", Description: "A chewy oatmeal raisin cookie with a hint of cinnamon.", Price: 1.75},
+			{ID: "3", Name: "Peanut butter cookie", Description: "A soft peanut butter cookie with a rich flavour.", Price: 2.25},
 		}
 
-		for _, album := range sampleAlbums {
-			err := CreateAlbum(album)
+		for _, cookie := range sampleCookies {
+			err := CreateCookie(cookie)
 			if err != nil {
-				log.Printf("Failed to insert sample album %s: %v", album.ID, err)
+				log.Printf("Failed to insert sample cookie %s: %v", cookie.ID, err)
 			}
 		}
 		log.Println("Sample data inserted")
 	}
 }
 
-// GetAllAlbums retrieves all albums from the database
-func GetAllAlbums() ([]Album, error) {
-	rows, err := DB.Query("SELECT id, title, artist, price FROM albums")
+// GetAllCookies retrieves all cookies from the database
+func GetAllCookies() ([]Cookie, error) {
+	rows, err := DB.Query("SELECT id, name, description, price FROM cookies")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var albums []Album
+	var cookies []Cookie
 	for rows.Next() {
-		var album Album
-		if err := rows.Scan(&album.ID, &album.Title, &album.Artist, &album.Price); err != nil {
+		var cookie Cookie
+		if err := rows.Scan(&cookie.ID, &cookie.Name, &cookie.Description, &cookie.Price); err != nil {
 			return nil, err
 		}
-		albums = append(albums, album)
+		cookies = append(cookies, cookie)
 	}
 
-	return albums, nil
+	return cookies, nil
 }
 
-// GetAlbumByID retrieves a specific album by ID
-func GetAlbumByID(id string) (*Album, error) {
-	var album Album
-	err := DB.QueryRow("SELECT id, title, artist, price FROM albums WHERE id = ?", id).
-		Scan(&album.ID, &album.Title, &album.Artist, &album.Price)
+// GetCookieByID retrieves a specific cookie by ID
+func GetCookieByID(id string) (*Cookie, error) {
+	var cookie Cookie
+	err := DB.QueryRow("SELECT id, name, description, price FROM cookies WHERE id = ?", id).
+		Scan(&cookie.ID, &cookie.Name, &cookie.Description, &cookie.Price)
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // Album not found
+			return nil, nil // Cookie not found
 		}
 		return nil, err
 	}
 
-	return &album, nil
+	return &cookie, nil
 }
 
-// CreateAlbum adds a new album to the database
-func CreateAlbum(album Album) error {
-	query := "INSERT INTO albums (id, title, artist, price) VALUES (?, ?, ?, ?)"
-	_, err := DB.Exec(query, album.ID, album.Title, album.Artist, album.Price)
+// CreateCookie adds a new cookie to the database
+func CreateCookie(cookie Cookie) error {
+	query := "INSERT INTO cookies (id, name, description, price) VALUES (?, ?, ?, ?)"
+	_, err := DB.Exec(query, cookie.ID, cookie.Name, cookie.Description, cookie.Price)
 	return err
 }
 
